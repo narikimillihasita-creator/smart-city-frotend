@@ -101,7 +101,7 @@ def render_auth_page():
                     else:
                         st.success("Registration successful! Please log in from the login tab.")
 
-    # 3. Admin Login Separation
+    # 3. Admin Login Separation (Hardcoded Admin Credentials)
     with tab_admin:
         st.subheader("Admin Portal Access")
         with st.form("admin_login_form"):
@@ -110,16 +110,15 @@ def render_auth_page():
             admin_submit = st.form_submit_button("Login as Admin")
             
             if admin_submit:
-                # Assuming Admin authenticates using dedicated route or administrative credentials
-                data, err = api_request("POST", "/api/identity/login", json={"gmail": admin_email, "password": admin_pass})
-                if err:
-                    st.error(err)
-                else:
+                # Hardcoded admin check since schema has no admin role/table
+                if admin_email == "admin@smartcity.com" and admin_pass == "admin123":
                     st.session_state.logged_in = True
                     st.session_state.gmail = admin_email
                     st.session_state.is_admin = True
                     st.success("Admin Session Initialized!")
                     st.rerun()
+                else:
+                    st.error("Invalid Admin Credentials. (Default: admin@smartcity.com / admin123)")
 
 # -----------------------------------------------------------------------------
 # User Dashboard
@@ -178,7 +177,6 @@ def render_user_dashboard():
     elif menu == "Vehicle Fleet":
         st.header("🚘 Vehicle Fleet Management")
         
-        # Display Fleet
         st.subheader("Your Registered Fleet")
         fleet, err = api_request("GET", f"/api/identity/users/{user_gmail}/vehicles")
         if err:
@@ -189,7 +187,6 @@ def render_user_dashboard():
             st.info("No vehicles registered under this account.")
 
         st.divider()
-        # Register Vehicle
         st.subheader("Register New Vehicle")
         with st.form("register_vehicle_form"):
             plate_no = st.text_input("Plate Number")
@@ -215,7 +212,6 @@ def render_user_dashboard():
                     st.rerun()
 
         st.divider()
-        # Delete Vehicle
         st.subheader("Remove a Vehicle")
         with st.form("delete_vehicle_form"):
             del_plate = st.text_input("Plate Number to Remove")
@@ -232,7 +228,6 @@ def render_user_dashboard():
     elif menu == "Parking & Reservations":
         st.header("🅿️ Parking & Reservations")
 
-        # Total Spend Metric
         spend_data, _ = api_request("GET", f"/api/booking/users/{user_gmail}/spent")
         if spend_data:
             total_spent = spend_data.get("total_spent", 0) if isinstance(spend_data, dict) else spend_data
@@ -312,7 +307,6 @@ def render_user_dashboard():
     elif menu == "Tickets & Appeals":
         st.header("🧾 Ticketing & Dispute Resolution")
         
-        # Pending Fines Total
         fines, _ = api_request("GET", f"/api/ticketing/users/{user_gmail}/fines/pending")
         total_fines = fines.get("total_pending_fines", 0) if isinstance(fines, dict) else (fines or 0)
         st.metric("Total Outstanding Fines", f"${total_fines}")
@@ -388,7 +382,6 @@ def render_admin_dashboard():
     if admin_menu == "System Overview":
         st.header("📊 System Overview")
         
-        # System Capacity Metrics
         cap, _ = api_request("GET", "/api/parking/capacity/total")
         if cap:
             col1, col2, col3 = st.columns(3)
@@ -601,4 +594,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
